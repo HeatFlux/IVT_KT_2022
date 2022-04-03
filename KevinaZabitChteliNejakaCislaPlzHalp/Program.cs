@@ -7,7 +7,7 @@ namespace KevinaZabitChteliNejakaCislaPlzHalp
     {
         static void Main(string[] args)
         {
-          Console.WriteLine("");
+            Console.WriteLine("");
             InputOutput io = new InputOutput();
             Factory factory = new Factory();
 
@@ -16,20 +16,54 @@ namespace KevinaZabitChteliNejakaCislaPlzHalp
             int queen = factory.GetKillerQueen;
             int[] numbers = factory.GetKillerNums;
 
+            int pairC = DoubleForSolution(numbers, queen);
+            //int pairCE = EnhancedAlgorithm(numbers, queen);
+
+            io.OutStr(factory.OutputInt(pairC));
+        }
+        static int DoubleForSolution(int[] numbers, int queen)
+        {
             int pairC = 0;
-            for(int i = 0; i < numbers.Length; i++)
+            for (int i = 0; i < numbers.Length; i++)
             {
-                for(int j = i++; j < numbers.Length; j++)
+                for (int j = i + 1; j < numbers.Length; j++)
                 {
-                    if(queen % (i + j) == 0)
+                    if ((numbers[i] + numbers[j]) % queen == 0)
                     {
                         pairC++;
                     }
                 }
             }
 
-            io.OutStr(factory.OutputInt(pairC));
+            return pairC;
         }
+        /*static int EnhancedAlgorithm(int[] numbers, int queen)
+        {
+            int[] modules = new int[queen];
+            for (int i = 0; i < modules.Length; i++)
+            {
+                modules[i] = 0;
+            }
+
+            for (int i = 0; i < numbers.Length; i++)
+            {
+                modules[numbers[i] % queen] += 1;
+            }
+
+            int pairC = 0;
+            //if (modules.Length > 0) pairC += ;
+            int halfLenght = numbers.Length / 2;
+            for (int i = 0; i < halfLenght; i++)
+            {
+                pairC += modules[i] * modules[modules.Length -1 -i];
+            }
+            if ((queen % 2) == 0)
+            {
+                int midModule = modules[modules.Length / 2 + 1];
+                if (midModule > 1) pairC += midModule / 2;
+            }
+            return pairC;
+        }*/
     }
     class Factory
     {

@@ -17,8 +17,7 @@ namespace KonzolInput
             }
             , sizeCheck: new CheckMinMax(new Message(), 0, 10))});
             input.GetValue(data);
-            Console.WriteLine(data.Value.Length.ToString());
-            Console.WriteLine(data.ToString());
+            input.OutStr(data);
         }
     }
     public class InputOutput
@@ -267,12 +266,13 @@ namespace KonzolInput
         }
         public override string ToString()
         {
-            string outStr = _data[0].ToString();
-            for (int i = 1; i < _data.Length; i++)
+            StringBuilder outStr = new StringBuilder();
+            for (int i = 0; i < _data.Length; i++)
             {
-                outStr += "\n" + _data[i];
+                outStr.Append("\n");
+                outStr.Append(_data[i]);
             }
-            return outStr;
+            return outStr.ToString();
         }
         public Message GetMessage
         {
@@ -593,10 +593,6 @@ namespace KonzolInput
                     _error = sizeCheck.Error;
                     success = false;
                 }
-            }
-            if (success)
-            {
-                
             }
             return success;
         }
