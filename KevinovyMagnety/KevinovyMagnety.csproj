@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="UvodniObjek">
+      <HintPath>..\UvodniObjek\bin\Debug\netcoreapp3.1\UvodniObjek.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
