@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 
 namespace KonzolInput
@@ -8,7 +9,7 @@ namespace KonzolInput
     {
         static void Main(string[] args)
         {
-            InputOutput input = new InputOutput();
+            InputOutputConsole input = new InputOutputConsole();
             //input.GetValue(new DataStringArray(checks: new VibeCheck<string[]>[1] { new CheckArray<string>(new CheckMinMax(1, 100)) }));
             DataArraySplitS data = new DataArraySplitS(new Message(),checks: new VibeCheck<IEnumerable<string>>[]{
             new CheckArray<string>(checks: new CheckStringFirstChar[]
@@ -20,9 +21,15 @@ namespace KonzolInput
             input.OutStr(data);
         }
     }
-    public class InputOutput
+    public interface InputOutputTask
     {
-        public InputOutput()
+        Task<bool> GetValueT(IData localData);
+        Task<bool> GetValuesT(IData[] localData);
+        Task<bool> OutStrT(IData localData);
+    }
+    public class InputOutputConsole : InputOutputTask
+    {
+        public InputOutputConsole()
         {
 
         }
@@ -53,6 +60,18 @@ namespace KonzolInput
         {
             Console.WriteLine(localData.ToString());
             return true;
+        }
+        public Task<bool> GetValueT(IData localData)
+        {
+            return new Task<bool>(() => GetValue(localData));
+        }
+        public Task<bool> GetValuesT(IData[] localData)
+        {
+            return new Task<bool>(() => GetValues(localData));
+        }
+        public Task<bool> OutStrT(IData localData)
+        {
+            return new Task<bool>(() => OutStr(localData));
         }
     }
     /*public interface IMessage
@@ -434,8 +453,8 @@ namespace KonzolInput
     }*/
     public interface VibeCheck<T>
     {
-        public bool QuickLook(T dato);
-        public string Error { get; }
+        bool QuickLook(T dato);
+        string Error { get; }
     }
     public class CheckMinMax : VibeCheck<int>
     {
