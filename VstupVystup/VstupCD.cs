@@ -9,7 +9,7 @@ namespace KonzolInput
     {
         static void Main(string[] args)
         {
-            InputOutputConsole input = new InputOutputConsole();
+            UserIOUser input = new UserIOUser();
             //input.GetValue(new DataStringArray(checks: new VibeCheck<string[]>[1] { new CheckArray<string>(new CheckMinMax(1, 100)) }));
             DataArraySplitS data = new DataArraySplitS(new Message(),checks: new VibeCheck<IEnumerable<string>>[]{
             new CheckArray<string>(checks: new CheckStringFirstChar[]
@@ -21,15 +21,15 @@ namespace KonzolInput
             input.OutStr(data);
         }
     }
-    public interface InputOutputTask
+    public interface IInputOutputUser
     {
         Task<bool> GetValueT(IData localData);
         Task<bool> GetValuesT(IData[] localData);
         Task<bool> OutStrT(IData localData);
     }
-    public class InputOutputConsole : InputOutputTask
+    public class UserIOUser : IInputOutputUser
     {
-        public InputOutputConsole()
+        public UserIOUser()
         {
 
         }
