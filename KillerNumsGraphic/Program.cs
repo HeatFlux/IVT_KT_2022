@@ -6,24 +6,25 @@ namespace KevinaZabitChteliNejakaCislaPlzHalp
 {
     public class Program
     {
-        InputOutputTask io;
-        public Program(InputOutputTask io)
+        IInputOutputUser io;
+        Factory factory;
+        DataView[] data;
+        public Program(IInputOutputUser io)
         {
             this.io = io;
+            factory = new Factory(io);
+            data = factory.gibData();
         }
         public async Task Run()
         {
-            Factory factory = new Factory();
-
-            IData[] data = factory.gibData();
-            await io.GetValuesT(data);
+            await io.GetValuesA(data);
             int queen = factory.GetKillerQueen;
             int[] numbers = factory.GetKillerNums;
 
             int pairC = DoubleForSolution(numbers, queen);
             //int pairCE = EnhancedAlgorithm(numbers, queen);
 
-            await io.OutStrT(factory.OutputInt(pairC));
+            await io.OutView(factory.OutputInt(pairC));
         }
         public static int DoubleForSolution(int[] numbers, int queen)
         {
@@ -71,13 +72,14 @@ namespace KevinaZabitChteliNejakaCislaPlzHalp
     }
     public class Factory
     {
+        IInputOutputUser io;
         private DataI killerQueen;
         private DataArraySplitI killerNums;
-        public Factory()
+        public Factory(IInputOutputUser io)
         {
-
+            this.io = io;
         }
-        public IData[] gibData()
+        public DataView[] gibData()
         {
             Message messageQueen = new Message(input: "Zadejte královnu");
             killerQueen = new DataI(messageQueen);
@@ -88,7 +90,7 @@ namespace KevinaZabitChteliNejakaCislaPlzHalp
             Message messageKiller = new Message(input: "Zadejte vražedná čísla oddělená \" \"");
             killerNums = new DataArraySplitI(messageKiller, ' ', checkKillerN);
 
-            return new IData[] { killerQueen, killerNums };
+            return new DataView[] { io.GetOpenView(killerQueen), io.GetOpenView(killerNums) };
         }
         public int GetKillerQueen
         {
@@ -98,11 +100,11 @@ namespace KevinaZabitChteliNejakaCislaPlzHalp
         {
             get { return killerNums.Value; }
         }
-        public DataI OutputInt(int outI)
+        public DataView OutputInt(int outI)
         {
-            DataI data = new DataI(new Message());
-            data.Value = outI;
-            return data;
+            DataI intData = new DataI(new Message());
+            intData.Value = outI;
+            return io.GetOutStrView(intData);
         }
     }
 }

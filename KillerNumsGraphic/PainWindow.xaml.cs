@@ -45,20 +45,20 @@ namespace KillerNumsGraphic
 
         private ViewBinder getViewBinder()
         {
-            return new ViewBinder(new DataView[] { new BasicInputView(queenT, queenIn), new BasicInputView(numT, numIn) });
+            return new ViewBinder(new IBindable[] { new BasicInputView(queenT, queenIn), new BasicInputView(numT, numIn) });
         }
-        private DataView getOutputView()
+        private IBindable getOutputView()
         {
             return new BasicLabelView(outputT);
         }
     }
 
-    class ViewInputOutput : InputOutputTask
+    class ViewInputOutput : IInputOutputUser
     {
         private TaskCompletionSource<bool> confirmTask;
         private ViewBinder binder;
-        private DataView outputView;
-        public ViewInputOutput(ViewBinder binder, DataView outputView)
+        private IBindable outputView;
+        public ViewInputOutput(ViewBinder binder, IBindable outputView)
         {
             this.binder = binder;
             this.outputView = outputView;
@@ -67,54 +67,64 @@ namespace KillerNumsGraphic
         {
             if(confirmTask != null) confirmTask.TrySetResult(true);
         }
-        public async Task<bool> GetValueT(IData requestedData)
+        public async Task<bool> GetValueA(DataView view)
         {
-            throw new NotSupportedException("Method ViewInputOutput/GetValueT does not have a definition");
+            throw new NotSupportedException("Unsupported behavior @ ViewInputOutput/GetValueA");
             /*confirmTask = new TaskCompletionSource<bool>();
             return await confirmTask.Task;*/
         }
-        public async Task<bool> GetValuesT(IData[] requestedData)
+        public async Task<bool> GetValuesA(DataView[] view)
         {
-            binder.insertData(requestedData);
+            for (int i = 0; i < view.Length; i++) view[i].Display();
+
             confirmTask = new TaskCompletionSource<bool>();
             await confirmTask.Task;
-            binder.FlushAll();
+
+            for (int i = 0; i < view.Length; i++) view[i].ReadVal();
             return true;
         }
-        public async Task<bool> OutStrT(IData outputtedData)
+        public async Task<bool> OutView(DataView view)
         {
-            outputView.SetData(outputtedData);
+            view.Display();
             return true;
+        }
+
+        public DataView GetOpenView(IData viewData)
+        {
+            return binder.BindOpen(viewData);
+        }
+        public DataView GetMultiView(IData viewData, string[] options)
+        {
+            throw new NotSupportedException("Unsupported behavior @ ViewInputOutput/GetMultiView");
+        }
+        public DataView GetOutStrView(IData viewData)
+        {
+            outputView.Bind(viewData);
+            return outputView.ToView();
         }
     }
     class ViewBinder
     {
-        DataView[] views;
-        public ViewBinder(DataView[] views)
+        int boundViews = 0;
+        IBindable[] views;
+        public ViewBinder(IBindable[] views)
         {
             this.views = views;
         }
-        public void insertData(IData[] data)
+        public DataView BindOpen(IData viewData)
         {
-            for (int i = 0; i < views.Length; i++)
-            {
-                views[i].SetData(data[i]);
-            }
-        }
-        public void FlushAll()
-        {
-            for (int i = 0; i < views.Length; i++)
-            {
-                views[i].Flush();
-            }
+            views[boundViews].Bind(viewData);
+            DataView view = views[boundViews].ToView();
+            boundViews++;
+            return view;
         }
     }
-    interface DataView
+    interface IBindable
     {
-        bool SetData(IData display);
-        bool Flush();
+        void Bind(IData data);
+        DataView ToView();
     }
-    class BasicInputView : DataView
+    class BasicInputView : DataView, IBindable
     {
         IData data;
 
@@ -125,35 +135,50 @@ namespace KillerNumsGraphic
             this.label = label;
             this.dataInput = dataInput;
         }
-        public bool SetData(IData display)
+        public void Bind(IData display)
         {
             data = display;
-
-            Message message = display.GetMessage;
+        }
+        public DataView ToView()
+        {
+            return this;
+        }
+        public bool Display()
+        {
+            Message message = data.GetMessage;
             label.Text = message.GetInput;
             return true;
         }
-        public bool Flush()
+        public bool ReadVal()
         {
             data.Process(dataInput.Text);
             return true;
         }
     }
-    class BasicLabelView : DataView
+    class BasicLabelView : DataView, IBindable
     {
+        IData data;
         TextBlock output;
         public BasicLabelView(TextBlock output)
         {
             this.output = output;
         }
-        public bool SetData(IData display)
+        public void Bind(IData display)
         {
-            output.Text = display.ToString();
+            data = display;
+        }
+        public DataView ToView()
+        {
+            return this;
+        }
+        public bool Display()
+        {
+            output.Text = data.ToString();
             return true;
         }
-        public bool Flush()
+        public bool ReadVal()
         {
-            throw new NotSupportedException("Undefined behavior @ BasicLabelView/Flush");
+            throw new NotSupportedException("Unsupported behavior @ BasicLabelView/ReadVal");
         }
     }
 }

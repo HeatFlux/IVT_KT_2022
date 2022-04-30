@@ -8,18 +8,20 @@ namespace KevinaZabitChteliNejakaCislaPlzHalp
         static void Main(string[] args)
         {
             Console.WriteLine("");
-            InputOutput io = new InputOutput();
-            Factory factory = new Factory();
+            IInputOutputUser io = new IOConsoleUser();
+            Factory factory = new Factory(io);
 
-            IData[] data = factory.gibData();
-            io.GetValues(data);
+            DataView[] data = factory.gibData();
+            io.GetValuesA(data).Wait();
             int queen = factory.GetKillerQueen;
             int[] numbers = factory.GetKillerNums;
 
             int pairC = DoubleForSolution(numbers, queen);
             //int pairCE = EnhancedAlgorithm(numbers, queen);
 
-            io.OutStr(factory.OutputInt(pairC));
+            io.OutView(factory.OutputInt(pairC)).Wait();
+
+            Console.ReadLine();
         }
         static int DoubleForSolution(int[] numbers, int queen)
         {
@@ -67,13 +69,14 @@ namespace KevinaZabitChteliNejakaCislaPlzHalp
     }
     class Factory
     {
+        IInputOutputUser io;
         private DataI killerQueen;
         private DataArraySplitI killerNums;
-        public Factory()
+        public Factory(IInputOutputUser io)
         {
-
+            this.io = io;
         }
-        public IData[] gibData()
+        public DataView[] gibData()
         {
             Message messageQueen = new Message(input: "Zadejte královnu");
             killerQueen = new DataI(messageQueen);
@@ -84,7 +87,7 @@ namespace KevinaZabitChteliNejakaCislaPlzHalp
             Message messageKiller = new Message(input: "Zadejte vražedná čísla oddělená \" \"");
             killerNums = new DataArraySplitI(messageKiller, ' ', checkKillerN);
 
-            return new IData[] { killerQueen, killerNums };
+            return new DataView[] { io.GetOpenView(killerQueen), io.GetOpenView(killerNums) };
         }
         public int GetKillerQueen
         {
@@ -94,11 +97,11 @@ namespace KevinaZabitChteliNejakaCislaPlzHalp
         {
             get { return killerNums.Value; }
         }
-        public DataI OutputInt(int outI)
+        public DataView OutputInt(int outI)
         {
             DataI data = new DataI(new Message());
             data.Value = outI;
-            return data;
+            return io.GetOutStrView(data);
         }
     }
 }

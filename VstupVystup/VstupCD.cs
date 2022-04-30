@@ -9,7 +9,7 @@ namespace KonzolInput
     {
         static void Main(string[] args)
         {
-            UserIOUser input = new UserIOUser();
+            IOConsoleUser input = new IOConsoleUser();
             //input.GetValue(new DataStringArray(checks: new VibeCheck<string[]>[1] { new CheckArray<string>(new CheckMinMax(1, 100)) }));
             DataArraySplitS data = new DataArraySplitS(new Message(),checks: new VibeCheck<IEnumerable<string>>[]{
             new CheckArray<string>(checks: new CheckStringFirstChar[]
@@ -17,63 +17,157 @@ namespace KonzolInput
                 new CheckStringFirstChar(new Message("Zadaný text musí začínat na a"), 'a')
             }
             , sizeCheck: new CheckMinMax(new Message(), 0, 10))});
-            input.GetValue(data);
-            input.OutStr(data);
+
+            DataView view = input.GetOpenView(data);
+            input.GetValueA(view).Wait();
+            input.OutStr(view);
         }
     }
     public interface IInputOutputUser
     {
-        Task<bool> GetValueT(IData localData);
-        Task<bool> GetValuesT(IData[] localData);
-        Task<bool> OutStrT(IData localData);
+        Task<bool> GetValueA(DataView view);
+        Task<bool> GetValuesA(DataView[] view);
+        Task<bool> OutView(DataView view);
+        DataView GetOutStrView(IData viewData);
+        DataView GetOpenView(IData viewData);
+        DataView GetMultiView(IData viewData, string[] options);
     }
-    public class UserIOUser : IInputOutputUser
+    public class IOConsoleUser : IInputOutputUser
     {
-        public UserIOUser()
+        public IOConsoleUser()
         {
 
         }
-        public bool GetValue(IData localData)
+        public bool GetValue(DataView view)
         {
-            bool success;
-            Message msg = localData.GetMessage;
-            do
-            {
-                Console.Write(msg.GetInput + ": ");
-                success = localData.Process(Console.ReadLine());
-                if (!success)
-                {
-                    Console.WriteLine(msg.GetError);
-                }
-            } while (!success);
-            return true;
+            return view.ReadVal();
         }
-        public bool GetValues(IData[] localData)
+        public bool GetValues(DataView[] views)
         {
-            foreach (IData data in localData)
+            foreach (DataView view in views)
             {
-                GetValue(data);
+                GetValue(view);
             }
             return true;
         }
-        public bool OutStr(IData localData)
+        public bool OutStr(DataView view)
         {
-            Console.WriteLine(localData.ToString());
+            view.Display();
             return true;
         }
-        public Task<bool> GetValueT(IData localData)
+        public Task<bool> GetValueA(DataView view)
         {
-            return new Task<bool>(() => GetValue(localData));
+            return Task.Run(() => GetValue(view));
         }
-        public Task<bool> GetValuesT(IData[] localData)
+        public Task<bool> GetValuesA(DataView[] view)
         {
-            return new Task<bool>(() => GetValues(localData));
+            return Task.Run(() => GetValues(view));
         }
-        public Task<bool> OutStrT(IData localData)
+        public Task<bool> OutView(DataView view)
         {
-            return new Task<bool>(() => OutStr(localData));
+            return Task.Run(() => OutStr(view));
+        }
+
+        public DataView GetOutStrView(IData viewData)
+        {
+            return new StrView(viewData);
+        }
+        public DataView GetOpenView(IData viewData)
+        {
+            return new OpenView(viewData);
+        }
+        public DataView GetMultiView(IData viewData, string[] options)
+        {
+            return new MultiView(viewData, options);
+        }
+
+        class OpenView : DataView
+        {
+            IData data;
+            public OpenView(IData data)
+            {
+                this.data = data;
+            }
+            public bool Display()
+            {
+                Console.WriteLine(data.ToString());
+                return true;
+            }
+            public bool ReadVal()
+            {
+                bool success;
+                Message msg = data.GetMessage;
+                do
+                {
+                    Console.Write(msg.GetInput + ": ");
+                    success = data.Process(Console.ReadLine());
+                    if (!success)
+                    {
+                        Console.WriteLine(msg.GetError);
+                    }
+                } while (!success);
+
+                return true;
+            }
+        }
+
+        class MultiView : DataView
+        {
+            string[] options;
+            IData data;
+            public MultiView(IData data, string[] options)
+            {
+                this.data = data;
+                this.options = options;
+            }
+            public bool Display()
+            {
+                Console.WriteLine(data.ToString());
+                return true;
+            }
+            public bool ReadVal()
+            {
+                bool success;
+                Message msg = data.GetMessage;
+                do
+                {
+                    Console.Write(msg.GetInput + ": ");
+                    success = data.Process(Console.ReadLine());
+                    if (!success)
+                    {
+                        Console.WriteLine(msg.GetError);
+                    }
+                } while (!success);
+
+                return true;
+            }
+        }
+
+        class StrView : DataView
+        {
+            IData viewData;
+            public StrView(IData viewData)
+            {
+                this.viewData = viewData;
+            }
+            public bool Display()
+            {
+                Console.WriteLine(viewData.ToString());
+                return true;
+            }
+            public bool ReadVal()
+            {
+                return true;
+            }
         }
     }
+    
+    public interface DataView
+    {
+        bool Display();
+        bool ReadVal();
+    }
+
     /*public interface IMessage
     {
         string _input { get; set; }
