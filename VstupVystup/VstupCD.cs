@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
+
 namespace KonzolInput
 {
     static class Program
@@ -11,7 +12,7 @@ namespace KonzolInput
         {
             IOConsoleUser input = new IOConsoleUser();
             //input.GetValue(new DataStringArray(checks: new VibeCheck<string[]>[1] { new CheckArray<string>(new CheckMinMax(1, 100)) }));
-            DataArraySplitS data = new DataArraySplitS(new Message(),checks: new VibeCheck<IEnumerable<string>>[]{
+            DataArraySplitS data = new DataArraySplitS(new Message(), checks: new VibeCheck<IEnumerable<string>>[]{
             new CheckArray<string>(checks: new CheckStringFirstChar[]
             {
                 new CheckStringFirstChar(new Message("Zadaný text musí začínat na a"), 'a')
@@ -20,7 +21,21 @@ namespace KonzolInput
 
             DataView view = input.GetOpenView(data);
             input.GetValueA(view).Wait();
-            input.OutStr(view);
+            input.OutView(view).Wait();
+
+
+            //Multi
+            string[] options = new string[] { "a", "A", "AAAAAAA" };
+            OneOfStrings check = new OneOfStrings(new Message("Please select out of the provided table"), options);
+            Message msg = new Message(input: "Vyberte hodnotu z");
+            DataS strDat = new DataS( msg, new OneOfStrings[]{ check } );
+            DataView multiView = input.GetMultiView(strDat, options);
+
+            input.GetValueA(multiView).Wait();
+
+            input.OutView(input.GetOutStrView(strDat)).Wait();
+
+            Console.ReadLine();
         }
     }
     public interface IInputOutputUser
@@ -38,39 +53,28 @@ namespace KonzolInput
         {
 
         }
-        public bool GetValue(DataView view)
-        {
-            return view.ReadVal();
-        }
-        public bool GetValues(DataView[] views)
-        {
-            foreach (DataView view in views)
-            {
-                GetValue(view);
-            }
-            return true;
-        }
-        public bool OutStr(DataView view)
-        {
-            view.Display();
-            return true;
-        }
         public Task<bool> GetValueA(DataView view)
         {
-            return Task.Run(() => GetValue(view));
+            return Task.Run(() => view.ReadVal());
         }
-        public Task<bool> GetValuesA(DataView[] view)
+        public Task<bool> GetValuesA(DataView[] views)
         {
-            return Task.Run(() => GetValues(view));
+            return Task.Run(() => {
+                foreach (DataView view in views)
+                {
+                    view.ReadVal();
+                }
+                return true;
+            });
         }
         public Task<bool> OutView(DataView view)
         {
-            return Task.Run(() => OutStr(view));
+            return Task.Run(() => view.Display());
         }
 
         public DataView GetOutStrView(IData viewData)
         {
-            return new StrView(viewData);
+            return new OpenView(viewData);
         }
         public DataView GetOpenView(IData viewData)
         {
@@ -122,7 +126,7 @@ namespace KonzolInput
             }
             public bool Display()
             {
-                Console.WriteLine(data.ToString());
+                for(int i = 0; i < options.Length; i++) Console.WriteLine(options[i]);
                 return true;
             }
             public bool ReadVal()
@@ -131,7 +135,8 @@ namespace KonzolInput
                 Message msg = data.GetMessage;
                 do
                 {
-                    Console.Write(msg.GetInput + ": ");
+                    Console.WriteLine(msg.GetInput + ": ");
+                    Display();
                     success = data.Process(Console.ReadLine());
                     if (!success)
                     {
@@ -139,24 +144,6 @@ namespace KonzolInput
                     }
                 } while (!success);
 
-                return true;
-            }
-        }
-
-        class StrView : DataView
-        {
-            IData viewData;
-            public StrView(IData viewData)
-            {
-                this.viewData = viewData;
-            }
-            public bool Display()
-            {
-                Console.WriteLine(viewData.ToString());
-                return true;
-            }
-            public bool ReadVal()
-            {
                 return true;
             }
         }
@@ -639,7 +626,7 @@ namespace KonzolInput
     {
         Message msg;
         string[] strings;
-        public OneOfStrings(Message msg, string[] strings, string error)
+        public OneOfStrings(Message msg, string[] strings)
         {
             this.strings = strings;
             this.msg = msg;
